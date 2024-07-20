@@ -13,7 +13,88 @@ model User {
   password   String   @db.Text()
   create_at  DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
+  workspaces UserOnWorkspace[]
+  owned_workspaces Workspace[]
+  clients Client[]
 
   @@index([email])
   @@map("users")
 }
+
+enum Permission {
+  EDIT
+  VIEW
+}
+
+model UserOnWorkspace {
+  @@id([user_id, workspace_id])
+  user_id   String
+  workspace_id String
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  permission Permission // permission for the user added in the workspace
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  public    Boolean  @default(false) // anyone can join using a link to the workspace id
+  owner User @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+  owner_id String
+  title       String
+  create_at  DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+  members UserOnWorkspace[]
+  clients ClientOnWorkspace[]
+  pipelines Pipeline[] // pipline list
+  @@map("workspaces")
+}
+
+model Pipeline {
+  id        String @id @default(cuid())
+  title     String
+  workspace_id String
+  workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  pos Int // to store the position of our pipline according to the workspace / to manage the drag and drop positions
+  assignment Assignment[]
+  @@map("pipelines")
+}
+
+model Assignment {
+  @@id([pipline_id, client_id])
+  pipline_id String
+  client_id String
+  client ClientOnWorkspace @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  pipeline Pipeline @relation(fields: [pipline_id], references: [id], onDelete: Cascade)
+  pos Int // to store the position of the assignment according to the pipeline / to manage the drag and drop positions
+}
+
+model Client {
+  id        String @id @default(cuid())
+  // The account who created the clients should manage them first
+  owner User @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+  owner_id String
+
+  name      String
+  email     String  // the email should be unique to the user that created it
+  phone     String 
+  create_at  DateTime @default(now()) // for the created at display in the client list
+  updated_at DateTime @default(now()) @updatedAt // for the edition date display in the client list
+  
+  workspace ClientOnWorkspace[]
+  
+ 
+  @@unique([email, owner_id]) // the email should be unique to the user that created it
+  // so we can have multiple clients with the same email but not for the same user
+  @@map("clients")
+}
+
+model ClientOnWorkspace {
+  id String @id @default(cuid())
+  // @@id([client_id, workspace_id]) remove due to the @relation in the assignment model
+  client_id   String
+  workspace_id String
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  assignments Assignment[]
+}
+
