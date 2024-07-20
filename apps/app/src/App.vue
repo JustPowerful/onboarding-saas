@@ -11,7 +11,7 @@ const appStore = useAppStore()
 const { isHydrating } = storeToRefs(appStore)
 useHead({
   titleTemplate: (title?: string) => {
-    const projectName = 'Saas monorepo'
+    const projectName = 'Onboarding'
     return !title ? projectName : `${title}`
   }
 })
