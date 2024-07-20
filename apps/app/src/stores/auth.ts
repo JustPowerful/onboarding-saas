@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import api from '@/services/api'
 import { router } from '@/router'
 import { dehydrate, hydrate } from '@/hydrate'
-import type { LoginBody } from '@/types'
+import type { LoginBody, RegisterBody } from '@/types'
 import type { ServerError } from '@/types/server'
 
 let firstRefresh = true
