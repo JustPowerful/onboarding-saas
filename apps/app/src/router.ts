@@ -8,6 +8,7 @@ import ForgotRoute from '@/routes/forgot/forgot-route.vue'
 import ResetRoute from '@/routes/reset/reset-route.vue'
 import PrivateNotFoundRoute from '@/routes/private-not-found-route.vue'
 import { useUserStore } from '@/stores/user'
+import RegisterRoute from './routes/register/register-route.vue'
 const defaultRoutes: RouteRecordRaw[] = [
   {
     path: '/',
@@ -17,6 +18,14 @@ const defaultRoutes: RouteRecordRaw[] = [
     name: 'login',
     path: '/login',
     component: LoginRoute,
+    meta: {
+      public: true
+    }
+  },
+  {
+    name: 'register',
+    path: '/register',
+    component: RegisterRoute,
     meta: {
       public: true
     }

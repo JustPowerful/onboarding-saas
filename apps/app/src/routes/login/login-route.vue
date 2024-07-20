@@ -39,7 +39,9 @@ const onSubmit = form.handleSubmit(async (values) => {
         <div class="w-full max-w-xs self-center pb-11 text-center">
           <h1 class="pb-2 text-4xl font-extrabold">{{ t('sign_in') }}</h1>
           <p class="font- text-muted-foreground pb-2 text-sm">{{ t('login_text') }}</p>
-          <label class="text-destructive bg-transparent text-xs" :class="[!authStore.isLoading && authStore.error ? 'block' : 'hidden']"
+          <label
+            class="text-destructive bg-transparent text-xs"
+            :class="[!authStore.isLoading && authStore.error ? 'block' : 'hidden']"
             >{{ authStore.error?.code ? t(authStore.error?.code) : authStore.error?.message }}
           </label>
         </div>
@@ -62,10 +64,12 @@ const onSubmit = form.handleSubmit(async (values) => {
               <FormMessage name="password" />
             </FormItem>
           </FormField>
-          <router-link :to="{ name: 'forgot' }" class="text-info text-sm font-semibold hover:underline">{{
-            t('did_you_forget_password')
-          }}</router-link>
-          <Button :disabled="isLoading">
+          <router-link
+            :to="{ name: 'forgot' }"
+            class="text-info text-sm font-semibold hover:underline"
+            >{{ t('did_you_forget_password') }}</router-link
+          >
+          <Button class="bg-zinc-900 hover:bg-zinc-800" :disabled="isLoading">
             <LoaderSpinner v-if="isLoading" class="mr-2 size-4 animate-spin" />
             <span>{{ t('sign_in') }}</span>
           </Button>
