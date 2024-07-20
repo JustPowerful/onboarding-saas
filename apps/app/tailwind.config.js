@@ -5,7 +5,12 @@ module.exports = {
   darkMode: ['class'],
   safelist: ['dark'],
 
-  content: ['./pages/**/*.{ts,tsx,vue}', './components/**/*.{ts,tsx,vue}', './app/**/*.{ts,tsx,vue}', './src/**/*.{ts,tsx,vue}'],
+  content: [
+    './pages/**/*.{ts,tsx,vue}',
+    './components/**/*.{ts,tsx,vue}',
+    './app/**/*.{ts,tsx,vue}',
+    './src/**/*.{ts,tsx,vue}'
+  ],
 
   theme: {
     container: {
@@ -94,7 +99,7 @@ module.exports = {
         'collapsible-up': 'collapsible-up 0.2s ease-in-out'
       },
       fontFamily: {
-        inter: ['Inter', fontFamily.sans]
+        inter: ['Poppins', fontFamily.sans]
       }
     }
   },
