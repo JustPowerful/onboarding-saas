@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "nodemon src/index.ts",
+    "dev": "tsx watch ./src/index.ts",
     "start": "dotenv -e ../../.env.production -- node dist/index.js",
     "clean": "rm -rf .turbo node_modules dist"
   },
@@ -49,17 +49,18 @@
     "nanoid": "^5.0.4",
     "pm2": "^5.3.1",
     "slugify": "^1.6.6",
+    "tsx": "^4.7.0",
     "uuid": "^9.0.1",
     "validator": "^13.11.0"
   },
   "devDependencies": {
+    "@saas-monorepo/typescript-config": "workspace:*",
     "@types/bcryptjs": "^2.4.6",
     "@types/fs-extra": "^11.0.4",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/lodash": "^4.14.202",
     "@types/node": "^20.11.0",
     "@types/uuid": "^9.0.7",
-    "@saas-monorepo/typescript-config": "workspace:*",
     "dotenv-cli": "^7.3.0",
     "nodemon": "^3.0.2",
     "pino-pretty": "^10.3.1",

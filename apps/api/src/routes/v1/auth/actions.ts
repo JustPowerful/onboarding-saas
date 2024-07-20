@@ -1,11 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import _ from 'lodash';
 
-import {
-  authCheckSchema,
-  loginSchema,
-  registerSchema,
-} from '../../../schemas/index.js';
+import { authCheckSchema, loginSchema, registerSchema } from '../../../schemas/index.js';
 import { AuthenticationService } from '../../../services/authentication.js';
 import { LoginPayload, RegisterPayload, ResetPayload } from '../../../types/auth.js';
 

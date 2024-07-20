@@ -1,4 +1,4 @@
-import { Prisma, User } from '@vaw/database';
+import { Prisma, User } from '@saas-monorepo/database';
 
 export type LoginResult = {
   accessToken: string;

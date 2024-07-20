@@ -1,10 +1,9 @@
 import { ajvFilePlugin } from '@fastify/multipart';
+import { PrismaClient, User } from '@saas-monorepo/database';
 import ajvFormat from 'ajv-formats';
 // Require library to exit fastify process, gracefully (if possible)
 import closeWithGrace from 'close-with-grace';
 import { FastifyInstance, FastifyServerOptions, fastify } from 'fastify';
-
-import { PrismaClient, User } from '@saas-monorepo/database';
 
 type Fastify = typeof fastify;
 declare module 'fastify' {
