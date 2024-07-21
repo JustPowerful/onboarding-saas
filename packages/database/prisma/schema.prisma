@@ -15,7 +15,8 @@ model User {
   updated_at DateTime @default(now()) @updatedAt
   workspaces UserOnWorkspace[]
   owned_workspaces Workspace[]
-  clients Client[]
+  allowed_pipelines UserOnPipeline[]
+  created_pipelines Pipeline[]
 
   @@index([email])
   @@map("users")
@@ -44,57 +45,63 @@ model Workspace {
   create_at  DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
   members UserOnWorkspace[]
-  clients ClientOnWorkspace[]
   pipelines Pipeline[] // pipline list
+  clients Client[] // client list
   @@map("workspaces")
 }
 
 model Pipeline {
   id        String @id @default(cuid())
   title     String
+  
+  // creator of the pipeline
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId String
+
   workspace_id String
   workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
   pos Int // to store the position of our pipline according to the workspace / to manage the drag and drop positions
   assignment Assignment[]
+  allowed_users UserOnPipeline[] // list of users allowed to modify the pipeline
   @@map("pipelines")
 }
 
+model UserOnPipeline {
+  @@id([user_id, pipeline_id])
+  user_id   String
+  pipeline_id String
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  pipeline Pipeline @relation(fields: [pipeline_id], references: [id], onDelete: Cascade)
+  permission Permission // permission for the user on the pipeline
+  @@map("pipline_allowed_users")
+}
+
 model Assignment {
-  @@id([pipline_id, client_id])
-  pipline_id String
+  id String @id @default(cuid())
+  pipeline_id String
+  pipline Pipeline @relation(fields: [pipeline_id], references: [id], onDelete: Cascade)
   client_id String
-  client ClientOnWorkspace @relation(fields: [client_id], references: [id], onDelete: Cascade)
-  pipeline Pipeline @relation(fields: [pipline_id], references: [id], onDelete: Cascade)
-  pos Int // to store the position of the assignment according to the pipeline / to manage the drag and drop positions
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  @@map("assignments")
 }
 
 model Client {
   id        String @id @default(cuid())
-  // The account who created the clients should manage them first
-  owner User @relation(fields: [owner_id], references: [id], onDelete: Cascade)
-  owner_id String
+  @@unique([email, workspaceId]) // unique email for the workspace
 
   name      String
   email     String  // the email should be unique to the user that created it
   phone     String 
+  
+  workspaceId String
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  assignment Assignment[]
+
   create_at  DateTime @default(now()) // for the created at display in the client list
   updated_at DateTime @default(now()) @updatedAt // for the edition date display in the client list
-  
-  workspace ClientOnWorkspace[]
-  
- 
-  @@unique([email, owner_id]) // the email should be unique to the user that created it
-  // so we can have multiple clients with the same email but not for the same user
+
   @@map("clients")
 }
 
-model ClientOnWorkspace {
-  id String @id @default(cuid())
-  // @@id([client_id, workspace_id]) remove due to the @relation in the assignment model
-  client_id   String
-  workspace_id String
-  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
-  workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
-  assignments Assignment[]
-}
+
 
