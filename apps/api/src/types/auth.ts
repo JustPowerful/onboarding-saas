@@ -31,8 +31,8 @@ export type ResetPayload = {
 };
 
 export type RegisterPayload = {
-  first_name: string;
-  last_name: string;
+  firstname: string;
+  lastname: string;
   email: string;
   password: string;
 };
