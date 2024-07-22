@@ -9,6 +9,8 @@ datasource db {
 
 model User {
   id         String   @id @default(cuid())
+  firstname String @default("John")
+  lastname String @default("Doe")
   email      String   @unique
   password   String   @db.Text()
   create_at  DateTime @default(now())
@@ -17,6 +19,7 @@ model User {
   owned_workspaces Workspace[]
   allowed_pipelines UserOnPipeline[]
   created_pipelines Pipeline[]
+  assignments UserAssignment[]
 
   @@index([email])
   @@map("users")
@@ -54,6 +57,10 @@ model Pipeline {
   id        String @id @default(cuid())
   title     String
   
+  // default pipelines are the ones that are created by the system initially and can't be deleted
+  // it contains the clients by default
+  default Boolean @default(false) // to know if the pipeline is the default one
+  
   // creator of the pipeline
   owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId String
@@ -61,7 +68,7 @@ model Pipeline {
   workspace_id String
   workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
   pos Int // to store the position of our pipline according to the workspace / to manage the drag and drop positions
-  assignment Assignment[]
+  client_assignments ClientAssignment[] // assigned clients to the pipeline
   allowed_users UserOnPipeline[] // list of users allowed to modify the pipeline
   @@map("pipelines")
 }
@@ -76,13 +83,39 @@ model UserOnPipeline {
   @@map("pipline_allowed_users")
 }
 
-model Assignment {
+model UserAssignment {
+  id String @id @default(cuid())
+  user_id String
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  task_id String
+  task Task @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  @@map("user_assignments")
+}
+
+model ClientAssignment {
+  // the assignement is the link between the client and the pipeline
   id String @id @default(cuid())
   pipeline_id String
   pipline Pipeline @relation(fields: [pipeline_id], references: [id], onDelete: Cascade)
   client_id String
   client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  tasks Task[]
+  pos Int // to store the position of our client according to the pipeline / to manage the drag and drop positions
   @@map("assignments")
+}
+
+model Task {
+  id        String @id @default(cuid())
+  title     String
+  description String
+  create_at  DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+  completed Boolean @default(false) // mark as completed or not
+  client_assignment_id String
+  client_assignment ClientAssignment @relation(fields: [client_assignment_id], references: [id], onDelete: Cascade)
+  user_assignments UserAssignment[]
+  
+  @@map("tasks")
 }
 
 model Client {
@@ -95,7 +128,7 @@ model Client {
   
   workspaceId String
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  assignment Assignment[]
+  assignments ClientAssignment[]
 
   create_at  DateTime @default(now()) // for the created at display in the client list
   updated_at DateTime @default(now()) @updatedAt // for the edition date display in the client list
