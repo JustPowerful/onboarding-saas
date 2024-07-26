@@ -8,18 +8,18 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(cuid())
-  firstname String @default("John")
-  lastname String @default("Doe")
-  email      String   @unique
-  password   String   @db.Text()
-  create_at  DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
-  workspaces UserOnWorkspace[]
-  owned_workspaces Workspace[]
+  id                String            @id @default(cuid())
+  firstname         String            @default("John")
+  lastname          String            @default("Doe")
+  email             String            @unique
+  password          String            @db.Text()
+  create_at         DateTime          @default(now())
+  updated_at        DateTime          @default(now()) @updatedAt
+  workspaces        UserOnWorkspace[]
+  owned_workspaces  Workspace[]
   allowed_pipelines UserOnPipeline[]
   created_pipelines Pipeline[]
-  assignments UserAssignment[]
+  assignments       UserAssignment[]
 
   @@index([email])
   @@map("users")
@@ -31,110 +31,113 @@ enum Permission {
 }
 
 model UserOnWorkspace {
-  @@id([user_id, workspace_id])
-  user_id   String
+  user_id      String
   workspace_id String
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
-  permission Permission // permission for the user added in the workspace
+  user         User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  workspace    Workspace  @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  permission   Permission // permission for the user added in the workspace
+
+  @@id([user_id, workspace_id])
 }
 
 model Workspace {
-  id        String   @id @default(cuid())
-  public    Boolean  @default(false) // anyone can join using a link to the workspace id
-  owner User @relation(fields: [owner_id], references: [id], onDelete: Cascade)
-  owner_id String
-  title       String
-  create_at  DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
-  members UserOnWorkspace[]
-  pipelines Pipeline[] // pipline list
-  clients Client[] // client list
+  id         String            @id @default(cuid())
+  public     Boolean           @default(false) // anyone can join using a link to the workspace id
+  owner      User              @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+  owner_id   String
+  title      String
+  create_at  DateTime          @default(now())
+  updated_at DateTime          @default(now()) @updatedAt
+  members    UserOnWorkspace[]
+  pipelines  Pipeline[] // pipline list
+  clients    Client[] // client list
+
   @@map("workspaces")
 }
 
 model Pipeline {
-  id        String @id @default(cuid())
-  title     String
-  
+  id    String @id @default(cuid())
+  title String
+
   // default pipelines are the ones that are created by the system initially and can't be deleted
   // it contains the clients by default
   default Boolean @default(false) // to know if the pipeline is the default one
-  
+
   // creator of the pipeline
-  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId String
 
-  workspace_id String
-  workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
-  pos Int // to store the position of our pipline according to the workspace / to manage the drag and drop positions
+  workspace_id       String
+  workspace          Workspace          @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  pos                Int // to store the position of our pipline according to the workspace / to manage the drag and drop positions
   client_assignments ClientAssignment[] // assigned clients to the pipeline
-  allowed_users UserOnPipeline[] // list of users allowed to modify the pipeline
+  allowed_users      UserOnPipeline[] // list of users allowed to modify the pipeline
+
   @@map("pipelines")
 }
 
 model UserOnPipeline {
-  @@id([user_id, pipeline_id])
-  user_id   String
+  user_id     String
   pipeline_id String
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  pipeline Pipeline @relation(fields: [pipeline_id], references: [id], onDelete: Cascade)
-  permission Permission // permission for the user on the pipeline
+  user        User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  pipeline    Pipeline   @relation(fields: [pipeline_id], references: [id], onDelete: Cascade)
+  permission  Permission // permission for the user on the pipeline
+
+  @@id([user_id, pipeline_id])
   @@map("pipline_allowed_users")
 }
 
 model UserAssignment {
-  id String @id @default(cuid())
+  id      String @id @default(cuid())
   user_id String
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
   task_id String
-  task Task @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  task    Task   @relation(fields: [task_id], references: [id], onDelete: Cascade)
+
   @@map("user_assignments")
 }
 
 model ClientAssignment {
   // the assignement is the link between the client and the pipeline
-  id String @id @default(cuid())
+  id          String   @id @default(cuid())
   pipeline_id String
-  pipline Pipeline @relation(fields: [pipeline_id], references: [id], onDelete: Cascade)
-  client_id String
-  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
-  tasks Task[]
-  pos Int // to store the position of our client according to the pipeline / to manage the drag and drop positions
+  pipline     Pipeline @relation(fields: [pipeline_id], references: [id], onDelete: Cascade)
+  client_id   String
+  client      Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  tasks       Task[]
+  pos         Int // to store the position of our client according to the pipeline / to manage the drag and drop positions
+
   @@map("assignments")
 }
 
 model Task {
-  id        String @id @default(cuid())
-  title     String
-  description String
-  create_at  DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
-  completed Boolean @default(false) // mark as completed or not
+  id                   String           @id @default(cuid())
+  title                String
+  description          String
+  create_at            DateTime         @default(now())
+  updated_at           DateTime         @default(now()) @updatedAt
+  completed            Boolean          @default(false) // mark as completed or not
   client_assignment_id String
-  client_assignment ClientAssignment @relation(fields: [client_assignment_id], references: [id], onDelete: Cascade)
-  user_assignments UserAssignment[]
-  
+  client_assignment    ClientAssignment @relation(fields: [client_assignment_id], references: [id], onDelete: Cascade)
+  user_assignments     UserAssignment[]
+
   @@map("tasks")
 }
 
 model Client {
-  id        String @id @default(cuid())
-  @@unique([email, workspaceId]) // unique email for the workspace
+  id String @id @default(cuid())
 
-  name      String
-  email     String  // the email should be unique to the user that created it
-  phone     String 
-  
+  name  String
+  email String // the email should be unique to the user that created it
+  phone String
+
   workspaceId String
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace   Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   assignments ClientAssignment[]
 
   create_at  DateTime @default(now()) // for the created at display in the client list
   updated_at DateTime @default(now()) @updatedAt // for the edition date display in the client list
 
+  @@unique([email, workspaceId]) // unique email for the workspace
   @@map("clients")
 }
-
-
-
