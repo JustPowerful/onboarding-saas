@@ -35,12 +35,11 @@ useHead({
 
 <template>
   <div class="flex h-screen w-full overflow-hidden">
-    <SideBar v-if="isSideBarOpen"></SideBar>
     <div class="flex w-full flex-col">
       <Header></Header>
       <!-- This is where your child components will be rendered -->
       <div id="main-content" ref="contentEl" class="relative w-full">
-        <div class="container h-[calc(100vh-5rem)] min-h-full w-full overflow-y-auto py-8">
+        <div class="h-[calc(100vh-4rem)] min-h-full w-full overflow-y-auto">
           <slot></slot>
         </div>
       </div>

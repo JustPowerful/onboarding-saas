@@ -22,11 +22,13 @@ import { BellRingIcon, LogOutIcon } from 'lucide-vue-next'
 </script>
 
 <template>
-  <header class="container relative z-20 hidden py-6 md:block">
+  <header class="container relative z-20 hidden py-4 md:block bg-zinc-800">
     <nav class="flex w-full items-center justify-between">
-      <div class=""></div>
+      <div class="">
+        <img src="@/assets/images/logo.png" />
+      </div>
       <div class="flex items-center gap-5">
-        <BellRingIcon class="text-muted-foreground" />
+        <BellRingIcon class="text-white" />
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
             <Avatar class="cursor-pointer">
