@@ -41,7 +41,14 @@ const routes: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           code: 'account_created_successfully',
         });
       } catch (err) {
-        throw err;
+        if (err instanceof Error) {
+          if (err.message === 'user_already_exists') {
+            return reply.code(400).send({
+              message: request.t('user_already_exists'),
+              code: 'user_already_exists',
+            });
+          }
+        }
       }
     },
   );
