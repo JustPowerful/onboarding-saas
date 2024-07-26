@@ -10,13 +10,27 @@ export class PipelineService {
 
   async createPipeline(data: PipelinePayload) {
     try {
-      await this.prisma.pipeline.create({
+      // get the highest pos value
+      const latestPipeline = await this.prisma.pipeline.findFirst({
+        where: {
+          workspace_id: data.workspace_id,
+        },
+        select: {
+          pos: true,
+        },
+        orderBy: {
+          pos: 'desc',
+        },
+      });
+      const pos = latestPipeline ? latestPipeline.pos + 1 : 0; // if there is no pipeline, set the pos to 0
+
+      return await this.prisma.pipeline.create({
         data: {
           title: data.title,
           default: data.default,
           workspace_id: data.workspace_id,
           ownerId: data.owner_id,
-          pos: data.pos,
+          pos: pos, // dynamically set the position value
         },
       });
     } catch (error) {}
