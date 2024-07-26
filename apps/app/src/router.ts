@@ -9,10 +9,19 @@ import ResetRoute from '@/routes/reset/reset-route.vue'
 import PrivateNotFoundRoute from '@/routes/private-not-found-route.vue'
 import { useUserStore } from '@/stores/user'
 import RegisterRoute from './routes/register/register-route.vue'
+import DashboardRoute from './routes/dashboard/dashboard-route.vue'
+import HomeOverview from './modules/home/routes/home-overview.vue'
+import WorkspaceRoute from './routes/workspace/workspace-route.vue'
+
 const defaultRoutes: RouteRecordRaw[] = [
   {
     path: '/',
     redirect: '/home'
+  },
+  {
+    name: 'home-overview',
+    path: '/home',
+    component: HomeOverview
   },
   {
     name: 'login',
@@ -28,6 +37,22 @@ const defaultRoutes: RouteRecordRaw[] = [
     component: RegisterRoute,
     meta: {
       public: true
+    }
+  },
+  {
+    name: 'dashboard',
+    path: '/dashboard',
+    component: DashboardRoute,
+    meta: {
+      public: false
+    }
+  },
+  {
+    name: 'workspace',
+    path: '/workspace/:workspaceId',
+    component: WorkspaceRoute,
+    meta: {
+      public: false
     }
   },
   {
