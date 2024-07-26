@@ -1,4 +1,5 @@
 {
-	"hello": "Welcome",
-	"invalid_token": "Invalid Token"
+  "hello": "Welcome",
+  "invalid_token": "Invalid Token",
+  "user_already_exists": "User already exists"
 }

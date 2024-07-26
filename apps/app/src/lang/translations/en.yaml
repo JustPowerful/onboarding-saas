@@ -18,3 +18,17 @@ invalid_token: Invalid token
 error: Error
 success: Success
 you_have_an_account: You already have an account?
+user_already_exists: User already exists
+save_changes: Save Changes
+workspace_placeholder: Workspace's title
+edit_workspace: Edit workspace
+edit_workspace_description: Make changes to your workspace here. Click save when you're done.
+delete_workspace: Delete workspace
+delete_workspace_description: Are you sure you want to delete this workspace?
+sure: Sure
+cancel: Cancel
+create_workspace: Create workspace
+create_workspace_description: Create a new workspace here. Click save when you're done.
+new_list: New list
+new_list_description: Create a new list here. Click save when you're done.
+list_placeholder: List's title
