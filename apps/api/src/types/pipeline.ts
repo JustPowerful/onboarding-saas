@@ -3,5 +3,4 @@ export type PipelinePayload = {
   title: string;
   workspace_id: string;
   owner_id: string;
-  pos: number;
 };
