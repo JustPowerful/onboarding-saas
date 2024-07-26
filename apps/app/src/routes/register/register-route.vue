@@ -3,6 +3,7 @@
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ref } from 'vue'
 
 // other
 import { useI18n } from 'vue-i18n'
@@ -13,11 +14,12 @@ import { router } from '@/router'
 import { z } from 'zod'
 import api from '@/services/api'
 import { toTypedSchema } from '@vee-validate/zod'
+import { Axios, AxiosError } from 'axios'
 
 const authStore = useAuthStore()
 const { t } = useI18n()
 const { isLoading } = storeToRefs(authStore)
-
+const formError = ref('')
 const formSchema = toTypedSchema(
   z
     .object({
@@ -43,13 +45,19 @@ const form = useForm({
 })
 
 const onSubmit = form.handleSubmit(async (values) => {
-  await api.post('/auth/register', values)
+  try {
+    await api.post('/auth/register', values)
+  } catch (error: any) {
+    if (error instanceof AxiosError) {
+      formError.value = error.response?.data?.message
+    }
+  }
   // after registering the user
   // we use the login method to authenticate the user
   const loginValues = { email: values.email, password: values.password }
   await authStore.login(loginValues)
   if (authStore.isAuthenticated) {
-    router.replace({ name: 'home-overview' })
+    router.replace({ name: 'dashboard' })
   }
 })
 </script>
@@ -62,8 +70,9 @@ const onSubmit = form.handleSubmit(async (values) => {
           <p class="font- text-muted-foreground pb-2 text-sm">{{ t('register_text') }}</p>
           <label
             class="text-destructive bg-transparent text-xs"
-            :class="[!authStore.isLoading && authStore.error ? 'block' : 'hidden']"
+            :class="[!authStore.isLoading && (authStore.error || formError) ? 'block' : 'hidden']"
             >{{ authStore.error?.code ? t(authStore.error?.code) : authStore.error?.message }}
+            {{ t(formError) }}
           </label>
         </div>
         <div class="flex flex-col gap-5">

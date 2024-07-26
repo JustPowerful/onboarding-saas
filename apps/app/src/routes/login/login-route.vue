@@ -28,7 +28,7 @@ const form = useForm({
 const onSubmit = form.handleSubmit(async (values) => {
   await authStore.login(values)
   if (authStore.isAuthenticated) {
-    router.replace({ name: 'home-overview' })
+    router.replace({ name: 'dashboard' })
   }
 })
 </script>
