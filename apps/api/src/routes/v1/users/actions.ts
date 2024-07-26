@@ -14,7 +14,9 @@ const routes: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     async (request, reply) => {
       try {
         const data = await usersService.getLoggedUserData(request.loggedUser.id);
-        return reply.code(200).send(data);
+        return reply.code(200).send({
+          user: data,
+        });
       } catch (err) {
         throw err;
       }
