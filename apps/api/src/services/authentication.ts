@@ -62,8 +62,9 @@ export class AuthenticationService {
         password: true,
       },
     });
+
     if (user) {
-      throw new Error('user already exist');
+      throw new Error('user_already_exists');
     }
 
     const hashedPassword = await this.hashPassword(payload.password);
