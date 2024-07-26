@@ -9,12 +9,22 @@ export class UsersService {
   }
   async getLoggedUserData(id: string) {
     try {
-      return await this.prisma.user.findUniqueOrThrow({
+      const user = await this.prisma.user.findUniqueOrThrow({
         where: {
           id: id,
         },
+        select: {
+          firstname: true,
+          lastname: true,
+          email: true,
+          create_at: true,
+          updated_at: true,
+        },
       });
+      console.log(user);
+      return user;
     } catch (err: any) {
-      throw err
-  }}
+      throw err;
+    }
+  }
 }

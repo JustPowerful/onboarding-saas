@@ -5,8 +5,17 @@ export const getLoggedUserDataSchema = {
       description: 'Successful response',
       type: 'object',
       properties: {
+        user: {
+          type: 'object',
+          properties: {
             id: { type: 'string' },
             email: { type: 'string' },
+            firstname: { type: 'string' },
+            lastname: { type: 'string' },
+            create_at: { type: 'string' },
+            updated_at: { type: 'string' },
+          },
+        },
       },
     },
     '4xx': {
