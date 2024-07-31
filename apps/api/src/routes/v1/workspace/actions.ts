@@ -1,3 +1,4 @@
+import { Permission } from '@saas-monorepo/database';
 import { FastifyPluginAsync } from 'fastify';
 import {
   createWorkspaceSchema,
@@ -134,6 +135,66 @@ const routes: FastifyPluginAsync = async (fastify, opt) => {
       }
     },
   );
+  fastify.post('/member/add', async (request, reply) => {
+    const { workspace_id, email, permission } = request.body as {
+      workspace_id: string;
+      email: string;
+      permission: Permission;
+    };
+    try {
+      await workspaceService.addMember(workspace_id, email, permission, request.loggedUser.id);
+      return reply.send({
+        message: 'Member added successfully',
+      });
+    } catch (error) {
+      throw error;
+    }
+  });
+  fastify.delete('/member/remove/:workspace_id/:user_id', async (request, reply) => {
+    const { workspace_id, user_id } = request.params as { workspace_id: string; user_id: string };
+    try {
+      await workspaceService.removeMember(workspace_id, user_id, request.loggedUser.id);
+      return reply.send({
+        message: 'Member removed successfully',
+      });
+    } catch (error) {
+      throw error;
+    }
+  });
+  fastify.get('/member/getall/:workspace_id', async (request, reply) => {
+    const { workspace_id } = request.params as { workspace_id: string };
+    try {
+      const users = await workspaceService.getMembers(workspace_id, request.loggedUser.id);
+      return reply.send({
+        message: 'Members fetched successfully',
+        users,
+      });
+    } catch (error) {
+      throw error;
+    }
+  });
+  fastify.patch('/member/update', async (request, reply) => {
+    const { member_id, workspace_id, permission } = request.body as {
+      member_id: string;
+      workspace_id: string;
+      permission: Permission;
+    };
+    const currentUserId = request.loggedUser.id;
+    try {
+      const member = await workspaceService.updateMemberPermission(
+        member_id,
+        workspace_id,
+        permission,
+        currentUserId,
+      );
+      return reply.send({
+        message: 'Member permission updated successfully',
+        member,
+      });
+    } catch (error) {
+      throw error;
+    }
+  });
 };
 
 export default routes;

@@ -1,4 +1,5 @@
-import { PrismaClient, Workspace } from '@saas-monorepo/database';
+import { Permission, PrismaClient, Workspace } from '@saas-monorepo/database';
+import { REPL_MODE_SLOPPY } from 'node:repl';
 import { AbstractServiceOptions } from 'src/types/services.js';
 import { WorkspacePayload } from 'src/types/workspace.js';
 
@@ -163,6 +164,112 @@ export class WorkspaceService {
       });
       return workspace as Workspace;
     } catch (err: any) {
+      throw new Error('internal_server_error');
+    }
+  }
+
+  async getMembers(workspace_id: string, current_user_id: string) {
+    const isOwner = await this.isWorkspaceOwner(workspace_id, current_user_id);
+    const isMember = await this.isWorkspaceMember(workspace_id, current_user_id);
+    if (!isOwner && !isMember) throw new Error('unauthorized');
+    try {
+      return await this.prisma.userOnWorkspace.findMany({
+        where: {
+          workspace_id,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstname: true,
+              lastname: true,
+              email: true,
+              create_at: true,
+              updated_at: true,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new Error('internal_server_error');
+    }
+  }
+
+  async addMember(
+    workspace_id: string,
+    user_email: string,
+    permission: Permission,
+    current_user_id: string,
+  ) {
+    const isOwner = await this.isWorkspaceOwner(workspace_id, current_user_id);
+    if (!isOwner) throw new Error('unauthorized');
+
+    try {
+      const workspace = await this.prisma.workspace.findUnique({
+        where: {
+          id: workspace_id,
+        },
+      });
+      if (!workspace) {
+        throw new Error('workspace_not_found');
+      }
+      const user = await this.prisma.user.findUnique({
+        where: {
+          email: user_email,
+        },
+      });
+      if (!user) {
+        throw new Error('user_not_found');
+      }
+      return await this.prisma.userOnWorkspace.create({
+        data: {
+          user_id: user.id,
+          workspace_id,
+          permission: permission,
+        },
+      });
+    } catch (error) {
+      throw new Error('internal_server_error');
+    }
+  }
+
+  async removeMember(workspace_id: string, user_id: string, current_user_id: string) {
+    const isOwner = await this.isWorkspaceOwner(workspace_id, current_user_id);
+    if (!isOwner) throw new Error('unauthorized');
+
+    try {
+      return await this.prisma.userOnWorkspace.deleteMany({
+        where: {
+          workspace_id,
+          user_id,
+        },
+      });
+    } catch (error) {
+      throw new Error('internal_server_error');
+    }
+  }
+
+  async updateMemberPermission(
+    member_id: string,
+    workspace_id: string,
+    permission: Permission,
+    current_user_id: string,
+  ) {
+    const isOwner = await this.isWorkspaceOwner(workspace_id, current_user_id);
+    if (!isOwner) throw new Error('unauthorized');
+    try {
+      const member = await this.prisma.userOnWorkspace.updateMany({
+        where: {
+          workspace_id: workspace_id,
+          user_id: member_id,
+        },
+        data: {
+          permission: permission,
+        },
+      });
+      return member;
+    } catch (error: any) {
+      // throw error;
       throw new Error('internal_server_error');
     }
   }
