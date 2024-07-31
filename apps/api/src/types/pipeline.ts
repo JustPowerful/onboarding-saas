@@ -1,6 +1,6 @@
 export type PipelinePayload = {
-  default: boolean;
+  default?: boolean;
   title: string;
-  workspace_id: string;
-  owner_id: string;
+  workspace_id?: string;
+  owner_id?: string;
 };
