@@ -38,6 +38,7 @@ export class ClientService {
             none: {},
           },
         },
+
         select: {
           id: true,
           name: true,
@@ -123,9 +124,15 @@ export class ClientService {
       if (!isOwner && !isMember) {
         throw new Error('unauthorized');
       }
-      await this.prisma.clientAssignment.deleteMany({
+
+      // await this.prisma.clientAssignment.deleteMany({
+      //   where: {
+      //     client_id: client_id,
+      //   },
+      // });
+      await this.prisma.client.delete({
         where: {
-          client_id: client_id,
+          id: client_id,
         },
       });
     } catch (error) {

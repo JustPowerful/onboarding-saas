@@ -70,6 +70,7 @@ const routes: FastifyPluginAsync = async (fastify, opt) => {
       throw error;
     }
   });
+  // fastify.post("/member/")
 };
 
 export default routes;
