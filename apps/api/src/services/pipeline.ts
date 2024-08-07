@@ -65,17 +65,17 @@ export class PipelineService {
               pos: 'asc',
             },
           },
-          allowed_users: {
-            select: {
-              user: {
-                select: {
-                  firstname: true,
-                  lastname: true,
-                  email: true,
-                },
-              },
-            },
-          },
+          // user_assignments: {
+          //   select: {
+          //     user: {
+          //       select: {
+          //         firstname: true,
+          //         lastname: true,
+          //         email: true,
+          //       },
+          //     },
+          //   },
+          // },
         },
         orderBy: {
           pos: 'asc',
@@ -86,39 +86,47 @@ export class PipelineService {
     }
   }
 
-  async createClientAssignment(pipeline_id: string, client_id: string, current_user_id: string) {
-    const pipeline = await this.getPipeline(pipeline_id);
-    if (!pipeline) throw new Error('pipeline_not_found');
-    const isMember = await this.workspaceService.isWorkspaceMember(
-      pipeline.workspace_id,
-      current_user_id,
-    );
-    const isOwner = await this.workspaceService.isWorkspaceOwner(
-      pipeline.workspace_id,
-      current_user_id,
-    );
-
-    if (isMember || isOwner) {
-      const latest = await this.prisma.clientAssignment.findFirst({
+  async getClientAssignment(assignment_id: string, current_user_id: string) {
+    try {
+      const assignment = await this.prisma.clientAssignment.findUnique({
         where: {
-          pipeline_id,
+          id: assignment_id,
         },
-        select: {
-          pos: true,
-        },
-        orderBy: {
-          pos: 'desc',
+        include: {
+          tasks: true,
+          client: true,
+          pipline: true,
+          members: {
+            select: {
+              id: true,
+              user_id: true,
+              client_assignment_id: true,
+              user: {
+                select: {
+                  firstname: true,
+                  lastname: true,
+                  email: true,
+                },
+              }
+            }
+          },
         },
       });
-      return await this.prisma.clientAssignment.create({
-        data: {
-          pos: latest ? latest.pos + 1 : 0,
-          pipeline_id,
-          client_id,
-        },
-      });
-    } else {
-      throw new Error('unauthorized');
+      if (!assignment) throw new Error('assignment_not_found');
+      const pipeline = await this.getPipeline(assignment.pipeline_id);
+      if (!pipeline) throw new Error('pipeline_not_found');
+      const isMember = await this.workspaceService.isWorkspaceMember(
+        pipeline.workspace_id,
+        current_user_id,
+      );
+      const isOwner = await this.workspaceService.isWorkspaceOwner(
+        pipeline.workspace_id,
+        current_user_id,
+      );
+      if (!isMember && !isOwner) throw new Error('unauthorized');
+      return assignment;
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -217,4 +225,126 @@ export class PipelineService {
       throw new Error('internal_server_error');
     }
   }
+
+  // bellow this is for member assignment (not client assignment)
+  // async getUnassignedMembers(pipeline_id: string, current_user_id: string) {
+  //   const pipeline = await this.prisma.pipeline.findUnique({
+  //     where: {
+  //       id: pipeline_id,
+  //     },
+  //   });
+  //   if (!pipeline) throw new Error('pipeline_not_found');
+  //   const workspaceId = pipeline.workspace_id;
+  //   const isOwner = this.workspaceService.isWorkspaceOwner(workspaceId, current_user_id);
+  //   const isMember = this.workspaceService.isWorkspaceMember(workspaceId, current_user_id);
+  //   if (!isOwner && !isMember) throw new Error('unauthorized');
+  //   const members = await this.prisma.user.findMany({
+  //     where: {
+  //       workspaces: {
+  //         some: {
+  //           workspace_id: workspaceId,
+  //         },
+  //       },
+  //       allowed_pipelines: {
+  //         none: {
+  //           pipeline_id: pipeline_id,
+  //         },
+  //       },
+  //     },
+  //   });
+  //   return members;
+  // }
+  // async getAssignedMembers(pipeline_id: string, current_user_id: string) {
+  //   try {
+  //     const pipeline = await this.prisma.pipeline.findUnique({
+  //       where: {
+  //         id: pipeline_id,
+  //       },
+  //       include: {
+  //         workspace: {
+  //           select: {
+  //             id: true,
+  //           },
+  //         },
+  //       },
+  //     });
+  //     if (!pipeline) throw new Error('pipeline_not_found');
+  //     const workspaceId = pipeline.workspace.id;
+  //     const isOwner = await this.workspaceService.isWorkspaceOwner(workspaceId, current_user_id);
+  //     const isMember = await this.workspaceService.isWorkspaceMember(workspaceId, current_user_id);
+  //     if (!isOwner && !isMember) throw new Error('unauthorized');
+  //     const members = await this.prisma.userOnPipeline.findMany({
+  //       where: {
+  //         pipeline_id,
+  //       },
+  //       include: {
+  //         user: {
+  //           select: {
+  //             id: true,
+  //             firstname: true,
+  //             lastname: true,
+  //             email: true,
+  //             create_at: true,
+  //             updated_at: true,
+  //           },
+  //         },
+  //       },
+  //     });
+  //     return members;
+  //   } catch (error) {
+  //     throw new Error('internal_server_error');
+  //   }
+  // }
+  // async addMember(pipeline_id: string, user_id: string, current_user_id: string) {
+  //   try {
+  //     const pipeline = await this.prisma.pipeline.findUnique({
+  //       where: {
+  //         id: pipeline_id,
+  //       },
+  //     });
+  //     if (!pipeline) throw new Error('pipeline_not_found');
+  //     const workspaceId = pipeline.workspace_id;
+  //     const isOwner = await this.workspaceService.isWorkspaceOwner(workspaceId, current_user_id);
+  //     const isMember = await this.workspaceService.isWorkspaceMember(workspaceId, current_user_id);
+  //     if (!isOwner && !isMember) throw new Error('unauthorized');
+  //     // check if the user is already a member
+  //     const isAssigned = await this.prisma.userOnPipeline.findFirst({
+  //       where: {
+  //         pipeline_id,
+  //         user_id,
+  //       },
+  //     });
+  //     if (isAssigned) throw new Error('user_already_assigned');
+  //     return await this.prisma.userOnPipeline.create({
+  //       data: {
+  //         pipeline_id,
+  //         user_id,
+  //       },
+  //     });
+  //   } catch (error) {
+  //     throw new Error('internal_server_error');
+  //   }
+  // }
+  // async removeMember(pipeline_id: string, user_id: string, current_user_id: string) {
+  //   try {
+  //     const pipeline = await this.prisma.pipeline.findUnique({
+  //       where: {
+  //         id: pipeline_id,
+  //       },
+  //     });
+  //     if (!pipeline) throw new Error('pipeline_not_found');
+  //     const workspaceId = pipeline.workspace_id;
+  //     const isOwner = await this.workspaceService.isWorkspaceOwner(workspaceId, current_user_id);
+  //     const isMember = await this.workspaceService.isWorkspaceMember(workspaceId, current_user_id);
+  //     if (!isOwner && !isMember) throw new Error('unauthorized');
+  //     await this.prisma.userOnPipeline.deleteMany({
+  //       where: {
+  //         user_id,
+  //         pipeline_id,
+  //       },
+  //     });
+  //   } catch (error) {
+  //     throw new Error('internal_server_error');
+  //   }
+  // }
 }

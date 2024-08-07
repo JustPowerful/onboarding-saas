@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { CreatePipelineSchema } from 'src/schemas/pipeline.js';
+import { ClientAssignmentService } from 'src/services/clientassignment.js';
 import { PipelineService } from 'src/services/pipeline.js';
 import { PipelinePayload } from 'src/types/pipeline.js';
 
@@ -8,6 +9,7 @@ const routes: FastifyPluginAsync = async (fastify, opt) => {
   const pipelineService = new PipelineService({
     prisma,
   });
+  const clientAssignmentService = new ClientAssignmentService({ prisma });
 
   fastify.post(
     '/create',
@@ -76,19 +78,6 @@ const routes: FastifyPluginAsync = async (fastify, opt) => {
     }
   });
 
-  fastify.post('/clientassignment/create', async (request, reply) => {
-    const { pipeline_id, client_id } = request.body as { pipeline_id: string; client_id: string };
-    const user_id = request.loggedUser.id;
-    try {
-      await pipelineService.createClientAssignment(pipeline_id, client_id, user_id);
-      return reply.send({
-        message: 'Client assignment created successfully',
-      });
-    } catch (error: any) {
-      throw error;
-    }
-  });
-
   fastify.patch('/updateorder/:workspace_id', async (request, reply) => {
     const { workspace_id } = request.params as { workspace_id: string };
     const { pipelines } = request.body as { pipelines: any[] };
@@ -102,6 +91,59 @@ const routes: FastifyPluginAsync = async (fastify, opt) => {
       throw error;
     }
   });
+
+  // MEMBER ASSIGNMENTS HERE
+  // fastify.post('/member/add', async (request, reply) => {
+  //   const { pipeline_id, user_id } = request.body as { pipeline_id: string; user_id: string };
+  //   const currentUserId = request.loggedUser.id;
+  //   try {
+  //     const assignment = await pipelineService.addMember(pipeline_id, user_id, currentUserId);
+  //     return reply.send({
+  //       message: 'Successfully assigned the user to the pipeline',
+  //       assignment,
+  //     });
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // });
+  // fastify.delete('/member/remove/:pipeline_id/:user_id', async (request, reply) => {
+  //   const { pipeline_id, user_id } = request.params as { pipeline_id: string; user_id: string };
+  //   const currentUserId = request.loggedUser.id;
+  //   try {
+  //     await pipelineService.removeMember(pipeline_id, user_id, currentUserId);
+  //     return reply.send({
+  //       message: 'Successfully removed the user from the pipeline',
+  //     });
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // });
+  // fastify.get('/member/getunassigned/:pipeline_id', async (request, reply) => {
+  //   const { pipeline_id } = request.params as { pipeline_id: string };
+  //   const currentUserId = request.loggedUser.id;
+  //   try {
+  //     const users = await pipelineService.getUnassignedMembers(pipeline_id, currentUserId);
+  //     return reply.send({
+  //       message: 'Successfully fetched unassigned users',
+  //       users,
+  //     });
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // });
+  // fastify.get('/member/getassigned/:pipeline_id', async (request, reply) => {
+  //   const { pipeline_id } = request.params as { pipeline_id: string };
+  //   const currentUserId = request.loggedUser.id;
+  //   try {
+  //     const users = await pipelineService.getAssignedMembers(pipeline_id, currentUserId);
+  //     return reply.send({
+  //       message: 'Successfully fetched assigned users',
+  //       users,
+  //     });
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // });
 };
 
 export default routes;
