@@ -45,7 +45,7 @@ const props = defineProps<{
 
 async function createClientAssignment(client: Client) {
   try {
-    await api.post('/pipeline/clientassignment/create', {
+    await api.post('/clientassignment/create', {
       pipeline_id: props.checklist.id,
       client_id: client.id
     })
@@ -224,7 +224,7 @@ watch(
         @end="props.saveOrder"
       >
         <template #item="{ element: client_assignment }">
-          <ClientComponent :data="client_assignment" />
+          <ClientComponent :data="client_assignment" :pipeline="checklist" />
         </template>
       </draggable>
       <div class="relative w-full">

@@ -25,7 +25,25 @@ export type ClientAssignment = {
   pipline: Pipeline
   client_id: string
   client: Client
-  // TODO: add tasks later
+  tasks: Task[]
+  members: {
+    id: string
+    user_id: string
+    client_assignment_id: string
+    user: User
+  }[]
+}
+
+export type Task = {
+  id: string
+  title: string
+  description: string
+  create_at: string
+  updated_at: string
+  completed: boolean
+  client_assignment: ClientAssignment
+  client_assignment_id: string
+  user_assignments: any // TODO: add the type of users assignments later
 }
 
 export type Checklist = {
