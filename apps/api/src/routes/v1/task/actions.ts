@@ -31,6 +31,32 @@ const routes: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       throw error;
     }
   });
+  fastify.patch('/update/:task_id', async (request, reply) => {
+    const { task_id } = request.params as { task_id: string };
+    const { title, description, deadline } = request.body as {
+      title: string;
+      description: string;
+      deadline: string;
+    };
+    const currentUserId = request.loggedUser.id;
+    try {
+      const task = await taskService.updateTask(
+        task_id,
+        {
+          title,
+          description,
+          deadline: deadline ? new Date(deadline) : undefined,
+        },
+        currentUserId,
+      );
+      return reply.send({
+        message: 'Successfully updated the task',
+        task,
+      });
+    } catch (error) {
+      throw error;
+    }
+  });
   fastify.delete('/delete/:task_id', async (request, reply) => {
     const { task_id } = request.params as { task_id: string };
     const currentUserId = request.loggedUser.id;
@@ -57,10 +83,10 @@ const routes: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   // MANAGE MEMBERS OF A TASK
   fastify.post('/member/add', async (request, reply) => {
-    const { pipeline_id, user_id } = request.body as { pipeline_id: string; user_id: string };
+    const { task_id, user_id } = request.body as { task_id: string; user_id: string };
     const currentUserId = request.loggedUser.id;
     try {
-      await taskService.assignMember(pipeline_id, user_id, currentUserId);
+      await taskService.assignMember(task_id, user_id, currentUserId);
       return reply.send({
         message: 'Successfully added the member to the task',
       });
@@ -80,11 +106,11 @@ const routes: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       throw error;
     }
   });
-  fastify.get('/member/getunassigned/:task_id', async (request, reply) => {
-    const { task_id } = request.params as { task_id: string };
+  fastify.get('/member/getunassigned', async (request, reply) => {
+    const { task_id, search } = request.query as { task_id: string; search: string };
     const currentUserId = request.loggedUser.id;
     try {
-      const members = await taskService.getUnassignedMembers(task_id, currentUserId);
+      const members = await taskService.getUnassignedMembers(task_id, search, currentUserId);
       return reply.send({
         message: 'Successfully fetched unassigned members',
         members,
@@ -101,6 +127,32 @@ const routes: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       return reply.send({
         message: 'Successfully fetched assigned members',
         members,
+      });
+    } catch (error) {
+      throw error;
+    }
+  });
+  fastify.patch('/complete', async (request, reply) => {
+    const { task_id } = request.body as { task_id: string };
+    const currentUserId = request.loggedUser.id;
+    try {
+      const task = await taskService.completeTask(task_id, currentUserId);
+      return reply.send({
+        message: 'Successfully completed the task',
+        task,
+      });
+    } catch (error) {
+      throw error;
+    }
+  });
+  fastify.patch('/uncomplete', async (request, reply) => {
+    const { task_id } = request.body as { task_id: string };
+    const currentUserId = request.loggedUser.id;
+    try {
+      const task = await taskService.uncompleteTask(task_id, currentUserId);
+      return reply.send({
+        message: 'Successfully uncompleted the task',
+        task,
       });
     } catch (error) {
       throw error;

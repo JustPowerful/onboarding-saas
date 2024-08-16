@@ -1,7 +1,7 @@
 import { PrismaClient } from '@saas-monorepo/database';
 import { pipeline } from 'node:stream';
 import { AbstractServiceOptions } from 'src/types/services.js';
-import { TaskPayload } from 'src/types/task.js';
+import { TaskPayload, TaskUpdatePayload } from 'src/types/task.js';
 
 import { WorkspaceService } from './workspace.js';
 
@@ -70,8 +70,8 @@ export class TaskService {
       });
       return task;
     } catch (error) {
-      // throw new Error('internal_server_error');
-      throw error;
+      throw new Error('internal_server_error');
+      // throw error;
     }
   }
 
@@ -141,6 +141,20 @@ export class TaskService {
             pipeline_id: pipeline_id,
           },
         },
+        include: {
+          user_assignments: {
+            select: {
+              user: {
+                select: {
+                  id: true,
+                  firstname: true,
+                  lastname: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
       });
       return tasks;
     } catch (error) {
@@ -148,7 +162,7 @@ export class TaskService {
     }
   }
 
-  async updateTask(data: TaskPayload, task_id: string, current_user_id: string) {
+  async updateTask(task_id: string, data: TaskUpdatePayload, current_user_id: string) {
     try {
       const task = await this.prisma.task.findUnique({
         where: {
@@ -178,13 +192,14 @@ export class TaskService {
         data: {
           title: data.title,
           description: data.description,
+          deadline: data.deadline,
         },
       });
     } catch (error) {
       throw new Error('internal_server_error');
     }
   }
-  async getUnassignedMembers(task_id: string, current_user_id: string) {
+  async getUnassignedMembers(task_id: string, search: string, current_user_id: string) {
     try {
       const task = await this.prisma.task.findUnique({
         where: {
@@ -209,10 +224,20 @@ export class TaskService {
       const isOwner = await this.workspaceService.isWorkspaceOwner(workspaceId, current_user_id);
 
       if (!isOwner && !isMember) throw new Error('unauthorized');
-
+      let searchCondition = {};
+      if (search) {
+        searchCondition = {
+          OR: [
+            { firstname: { contains: search, mode: 'insensitive' } },
+            { lastname: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+          ],
+        };
+      }
       // get the members that are assigned in the workspaces but never assigned in this task
       const members = await this.prisma.user.findMany({
         where: {
+          ...searchCondition,
           workspaces: {
             some: {
               workspace_id: workspaceId,
@@ -223,11 +248,16 @@ export class TaskService {
               task_id: task_id,
             },
           },
-          allowed_pipelines: {
+          user_on_client_assignments: {
             some: {
-              pipeline_id: task.client_assignment.pipline.id,
+              client_assignment_id: task.client_assignment_id,
             },
           },
+          // allowed_pipelines: {
+          //   some: {
+          //     pipeline_id: task.client_assignment.pipline.id,
+          //   },
+          // },
         },
       });
       return members;
@@ -285,6 +315,7 @@ export class TaskService {
           },
         },
       });
+      console.log('MEMBER id::::::: ', member_id);
       if (!task) throw new Error('task_not_found');
       const workspaceId = task.client_assignment.pipline.workspace_id;
       const isMember = await this.workspaceService.isWorkspaceMember(workspaceId, current_user_id);
@@ -338,6 +369,77 @@ export class TaskService {
         where: {
           user_id: member_id,
           task_id: task_id,
+        },
+      });
+    } catch (error) {
+      throw new Error('internal_server_error');
+    }
+  }
+
+  async completeTask(task_id: string, current_user_id: string) {
+    try {
+      const task = await this.prisma.task.findUnique({
+        where: {
+          id: task_id,
+        },
+        include: {
+          client_assignment: {
+            select: {
+              pipline: {
+                select: {
+                  workspace_id: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      if (!task) throw new Error('task_not_found');
+      const workspaceId = task.client_assignment.pipline.workspace_id;
+      const isMember = await this.workspaceService.isWorkspaceMember(workspaceId, current_user_id);
+      const isOwner = await this.workspaceService.isWorkspaceOwner(workspaceId, current_user_id);
+      if (!isOwner && !isMember) throw new Error('unauthorized');
+      return await this.prisma.task.update({
+        where: {
+          id: task_id,
+        },
+        data: {
+          completed: true,
+        },
+      });
+    } catch (error) {
+      throw new Error('internal_server_error');
+    }
+  }
+  async uncompleteTask(task_id: string, current_user_id: string) {
+    try {
+      const task = await this.prisma.task.findUnique({
+        where: {
+          id: task_id,
+        },
+        include: {
+          client_assignment: {
+            select: {
+              pipline: {
+                select: {
+                  workspace_id: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      if (!task) throw new Error('task_not_found');
+      const workspaceId = task.client_assignment.pipline.workspace_id;
+      const isMember = await this.workspaceService.isWorkspaceMember(workspaceId, current_user_id);
+      const isOwner = await this.workspaceService.isWorkspaceOwner(workspaceId, current_user_id);
+      if (!isOwner && !isMember) throw new Error('unauthorized');
+      return await this.prisma.task.update({
+        where: {
+          id: task_id,
+        },
+        data: {
+          completed: false,
         },
       });
     } catch (error) {
