@@ -93,7 +93,22 @@ export class PipelineService {
           id: assignment_id,
         },
         include: {
-          tasks: true,
+          tasks: {
+            include: {
+              user_assignments: {
+                select: {
+                  user: {
+                    select: {
+                      id: true,
+                      firstname: true,
+                      lastname: true,
+                      email: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
           client: true,
           pipline: true,
           members: {
@@ -103,12 +118,13 @@ export class PipelineService {
               client_assignment_id: true,
               user: {
                 select: {
+                  id: true,
                   firstname: true,
                   lastname: true,
                   email: true,
                 },
-              }
-            }
+              },
+            },
           },
         },
       });
