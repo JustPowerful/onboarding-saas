@@ -20,6 +20,19 @@ const routes: FastifyPluginAsync = async (fastify, opt) => {
     }
   });
 
+  fastify.delete('/delete/:client_assignment_id', async (request, reply) => { 
+    const { client_assignment_id } = request.params as { client_assignment_id: string };
+    const currentUserId = request.loggedUser.id;
+    try {
+      await clientAssignmentService.removeClientAssignment(client_assignment_id, currentUserId);
+      return reply.send({
+        message: 'Client assignment deleted successfully',
+      });
+    } catch (error) {
+      throw error;
+    }
+  });
+
   fastify.get('/get/:pipeline_id', async (request, reply) => {
     const { pipeline_id } = request.params as { pipeline_id: string };
     const currentUserId = request.loggedUser.id;
@@ -103,6 +116,27 @@ const routes: FastifyPluginAsync = async (fastify, opt) => {
       return reply.send({
         message: 'Successfully fetched assigned members',
         members,
+      });
+    } catch (error) {
+      throw error;
+    }
+  });
+  fastify.patch('/update', async (request, reply) => {
+    const { client_assignment_id, data } = request.body as {
+      client_assignment_id: string;
+      data: {
+        deadline: Date;
+      };
+    };
+    const currentUserId = request.loggedUser.id;
+    try {
+      await clientAssignmentService.updateClientAssignment(
+        client_assignment_id,
+        data,
+        currentUserId,
+      );
+      return reply.send({
+        message: 'Client assignment updated successfully',
       });
     } catch (error) {
       throw error;
