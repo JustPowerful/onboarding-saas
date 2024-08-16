@@ -88,6 +88,9 @@ export class ClientService {
     const isMember = await this.workspaceService.isWorkspaceMember(workspace_id, current_user_id);
     if (!isOwner && !isMember) throw new Error('unauthorized');
 
+    if (!(await this.workspaceService.hasPermission(workspace_id, current_user_id, 'EDIT')))
+      throw new Error('unauthorized');
+
     try {
       const client = await this.prisma.client.create({
         data: {
@@ -124,6 +127,9 @@ export class ClientService {
       if (!isOwner && !isMember) {
         throw new Error('unauthorized');
       }
+
+      if (!(await this.workspaceService.hasPermission(client.workspaceId, current_user_id, 'EDIT')))
+        throw new Error('unauthorized');
 
       // await this.prisma.clientAssignment.deleteMany({
       //   where: {

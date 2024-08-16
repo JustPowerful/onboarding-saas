@@ -9,6 +9,26 @@ export class WorkspaceService {
     this.prisma = options.prisma;
   }
 
+  async hasPermission(workspace_id: string, user_id: string, permission: Permission) {
+    try {
+      const userOnWorkspace = await this.prisma.userOnWorkspace.findFirst({
+        where: {
+          workspace_id,
+          user_id,
+        },
+      });
+      const workspace = await this.prisma.workspace.findUnique({
+        where: { id: workspace_id },
+      });
+      if (!workspace) throw new Error('workspace_not_found');
+      if (workspace.owner_id === user_id) return true;
+      if (!userOnWorkspace) return false;
+      return userOnWorkspace.permission === permission;
+    } catch (error) {
+      throw new Error('internal_server_error');
+    }
+  }
+
   async isWorkspaceOwner(workspace_id: string, user_id: string) {
     try {
       const workspace = await this.prisma.workspace.findUnique({
