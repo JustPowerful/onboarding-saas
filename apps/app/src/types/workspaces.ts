@@ -1,3 +1,4 @@
+import type { DateValue } from '@internationalized/date'
 import type { User } from './users'
 
 export type Client = {
@@ -32,6 +33,7 @@ export type ClientAssignment = {
     client_assignment_id: string
     user: User
   }[]
+  deadline: Date
 }
 
 export type Task = {
@@ -44,6 +46,7 @@ export type Task = {
   client_assignment: ClientAssignment
   client_assignment_id: string
   user_assignments: any // TODO: add the type of users assignments later
+  deadline: DateValue
 }
 
 export type Checklist = {

@@ -10,6 +10,9 @@ import {
   X,
   Loader2 as LoaderSpinner
 } from 'lucide-vue-next'
+
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+
 import draggable from 'vuedraggable'
 import Button from '@/components/ui/button/Button.vue'
 import api from '@/services/api'
@@ -224,25 +227,26 @@ watch(
         @end="props.saveOrder"
       >
         <template #item="{ element: client_assignment }">
-          <ClientComponent :data="client_assignment" :pipeline="checklist" />
+          <ClientComponent
+            :data="client_assignment"
+            :pipeline="checklist"
+            :reload-checklists="reloadChecklists"
+          />
         </template>
       </draggable>
-      <div class="relative w-full">
-        <Button
-          v-if="checklist.default"
-          @click="clientManagerState.toggleOpen = !clientManagerState.toggleOpen"
-          class="flex items-center gap-2 w-full"
-        >
-          Assign Client <Plus :size="16" />
-        </Button>
-        <div
-          v-if="clientManagerState.toggleOpen"
-          class="flex flex-col items-start absolute w-full p-4 bg-white text-black rounded-md shadow-md top-[3rem]"
-        >
-          <button @click="clientManagerState.toggleOpen = false" class="absolute top-3 right-3">
-            <X :size="16" />
-          </button>
+      <Popover>
+        <PopoverTrigger class="w-full">
+          <Button
+            v-if="checklist.default"
+            @click="clientManagerState.toggleOpen = !clientManagerState.toggleOpen"
+            class="flex items-center gap-2 w-full"
+          >
+            Assign Client <Plus :size="16" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent>
           <div class="text-md font-bold mb-2">Project clients</div>
+
           <div>
             <form @submit.prevent="getUnassignedClients" class="grid grid-cols-[9fr_1fr] gap-2">
               <Input v-model="clientManagerState.search" :placeholder="'Search clients'" />
@@ -259,7 +263,7 @@ watch(
             <button
               @click="
                 () => {
-                  createClientAssignment(client)
+                  createClientAssignment(client as Client)
                 }
               "
               class="flex flex-col gap-1 p-2 hover:bg-zinc-100 w-full border-t-2"
@@ -270,8 +274,8 @@ watch(
               </div>
             </button>
           </div>
-        </div>
-      </div>
+        </PopoverContent>
+      </Popover>
     </div>
   </div>
 </template>

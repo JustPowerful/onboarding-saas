@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { ClientAssignment, Pipeline } from '@/types/workspaces'
-import { Calendar, Edit, Ellipsis, Loader2, Plus, UserPlus } from 'lucide-vue-next'
+import { Edit, Ellipsis, Loader2, Plus, Trash, UserPlus } from 'lucide-vue-next'
 
 import { Sheet, SheetContent, SheetHeader, SheetTrigger } from '@/components/ui/sheet'
-import { reactive, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import api from '@/services/api'
 import draggable from 'vuedraggable'
 import Button from '@/components/ui/button/Button.vue'
@@ -11,6 +11,7 @@ import Button from '@/components/ui/button/Button.vue'
 const props = defineProps<{
   data: ClientAssignment
   pipeline: Pipeline
+  reloadChecklists: () => Promise<void>
 }>()
 
 import {
@@ -19,11 +20,54 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from '@/components/ui/dialog'
 // import { ScrollArea } from '@/components/ui/scroll-area'
+
+import {
+  DateFormatter,
+  type DateValue,
+  getLocalTimeZone,
+  toCalendarDate,
+  today
+} from '@internationalized/date'
+
+import { Calendar as CalendarIcon } from 'lucide-vue-next'
+import { Calendar } from '@/components/ui/calendar'
+import { cn } from '@/lib/shadcn'
+
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+
+const df = new DateFormatter('en-US', {
+  dateStyle: 'long'
+})
+
+async function updateClientAssignment() {
+  try {
+    await api.patch(`/clientassignment/update`, {
+      client_assignment_id: props.data.id,
+      data: {
+        deadline: date.value
+      }
+    })
+  } catch (error: any) {
+    throw error
+  }
+}
+
+const date = ref<DateValue | null>(
+  props.data.deadline ? (new Date(props.data.deadline) as unknown as DateValue) : null
+)
+
+watch(
+  () => date.value,
+  () => {
+    if (date.value) {
+      // update function
+      updateClientAssignment()
+    }
+  }
+)
 
 import Input from '@/components/ui/input/Input.vue'
 import Textarea from '@/components/ui/textarea/Textarea.vue'
@@ -31,6 +75,7 @@ import Task from './Task.vue'
 import type { User } from '@/types'
 import Avatar from '@/components/ui/avatar/Avatar.vue'
 import AvatarFallback from '@/components/ui/avatar/AvatarFallback.vue'
+import AssignedMember from './AssignedMember.vue'
 
 const clientAssignmentState = reactive({
   toggleSheet: false,
@@ -46,6 +91,26 @@ const createTaskState = reactive({
   description: '',
   error: null as null | string
 })
+
+const removeClientState = reactive({
+  isDialogOpen: false,
+  loading: false,
+  error: null as null | string
+})
+
+async function removeClientAssignment() {
+  try {
+    removeClientState.loading = true
+    await api.delete(`/clientassignment/delete/${props.data.id}`)
+    await props.reloadChecklists()
+  } catch (error: any) {
+    removeClientState.error = error.message
+  } finally {
+    removeClientState.loading = false
+    removeClientState.isDialogOpen = false
+  }
+}
+
 async function getClientAssignmentData() {
   try {
     clientAssignmentState.loading = true
@@ -119,6 +184,15 @@ async function addMember(memberId: string) {
   }
 }
 
+async function removeMember(memberId: string) {
+  try {
+    await api.delete(`/clientassignment/member/remove/${props.data.id}/${memberId}`)
+    getClientAssignmentData()
+  } catch (error: any) {
+    memberSearchState.error = error.message
+  }
+}
+
 watch(
   () => memberSearchState.isDialogOpen,
   () => {
@@ -147,7 +221,7 @@ watch(
           </SheetHeader>
           <div class="grid grid-cols-2 gap-5 mb-4">
             <div class="text-zinc-700">Assigned Staff</div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-4">
               <Popover v-model:open="memberSearchState.isDialogOpen">
                 <PopoverTrigger> <UserPlus class="text-zinc-500" :size="16" /> </PopoverTrigger>
                 <PopoverContent>
@@ -180,21 +254,41 @@ watch(
                 </PopoverContent>
               </Popover>
               <div v-if="clientAssignmentState.data" class="flex">
-                <div
+                <AssignedMember
                   v-for="member in clientAssignmentState.data.members"
-                  class="w-6 h-6 rounded-full bg-red-400 flex items-center justify-center text-xs text-white -ml-2 border border-white hover:scale-105"
-                >
-                  {{ member.user.firstname[0] }}
-                </div>
+                  :member="member"
+                  :remove-member="() => removeMember(member.user.id)"
+                />
               </div>
             </div>
           </div>
           <div class="grid grid-cols-2 gap-5 mb-4">
             <div class="text-zinc-700">Deadline</div>
             <div>
-              <button class="flex items-center gap-2 text-zinc-700">
-                <Calendar :size="14" /> Add a deadline
-              </button>
+              <!-- Calendar button -->
+              <Popover>
+                <PopoverTrigger as-child>
+                  <Button
+                    variant="outline"
+                    :class="
+                      cn('justify-start text-left font-normal', !date && 'text-muted-foreground')
+                    "
+                  >
+                    <CalendarIcon class="mr-2 h-4 w-4" />
+                    <!-- {{
+                      date
+                        ? df.format(date as any)
+                        : data.deadline
+                          ? df.format(new Date(data.deadline))
+                          : 'Pick a date'
+                    }} -->
+                    {{ date ? df.format(date as any) : 'Pick a date' }}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent class="w-auto p-0">
+                  <Calendar v-model="date" initial-focus />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
           <div class="grid grid-cols-2 gap-5 mb-8">
@@ -214,7 +308,7 @@ watch(
               ghost-class="drag-task"
             >
               <template #item="{ element: taskData }">
-                <Task :task="taskData" />
+                <Task :task="taskData" :refresh-client-assignment="getClientAssignmentData" />
               </template>
             </draggable>
 
@@ -258,6 +352,36 @@ watch(
               </Button>
             </div>
           </div>
+          <Dialog v-model:open="removeClientState.isDialogOpen">
+            <DialogTrigger>
+              <Button
+                @click="removeClientState.isDialogOpen = true"
+                class="w-full mt-4 flex items-center gap-1"
+              >
+                <Trash :size="16" /> Remove client from list
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Remove client from the list</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to remove the client from the list?
+                </DialogDescription>
+              </DialogHeader>
+
+              <DialogFooter>
+                <Button class="flex items-center gap-1" @click="removeClientAssignment">
+                  <Loader2 v-if="removeClientState.loading" class="animate-spin" :size="16" />
+                  Sure</Button
+                >
+                <Button
+                  @click="removeClientState.isDialogOpen = false"
+                  class="bg-zinc-800 hover:bg-zinc-700"
+                  >Cancel</Button
+                >
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
         <div v-else>
           <Loader2 :size="20" class="text-zinc-800 animate-spin" />

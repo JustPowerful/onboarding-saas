@@ -73,7 +73,7 @@ model Pipeline {
   workspace          Workspace          @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
   pos                Int // to store the position of our pipline according to the workspace / to manage the drag and drop positions
   client_assignments ClientAssignment[] // assigned clients to the pipeline
-  user_assignments      UserOnPipeline[] // list of users that are assigned to the pipeline 
+  user_assignments   UserOnPipeline[] // list of users that are assigned to the pipeline 
 
   @@map("pipelines")
 }
@@ -82,7 +82,7 @@ model UserOnPipeline {
   user_id     String
   pipeline_id String
   // user        User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  pipeline    Pipeline   @relation(fields: [pipeline_id], references: [id], onDelete: Cascade)
+  pipeline    Pipeline @relation(fields: [pipeline_id], references: [id], onDelete: Cascade)
   // permission  Permission // permission for the user on the pipeline
 
   @@id([user_id, pipeline_id])
@@ -101,26 +101,26 @@ model UserAssignment {
 
 model ClientAssignment {
   // the assignement is the link between the client and the pipeline
-  id          String   @id @default(cuid())
+  id          String                   @id @default(cuid())
   pipeline_id String
-  pipline     Pipeline @relation(fields: [pipeline_id], references: [id], onDelete: Cascade)
+  pipline     Pipeline                 @relation(fields: [pipeline_id], references: [id], onDelete: Cascade)
   client_id   String
-  client      Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  client      Client                   @relation(fields: [client_id], references: [id], onDelete: Cascade)
   tasks       Task[]
   pos         Int // to store the position of our client according to the pipeline / to manage the drag and drop positions
-  members    UserOnClientAssignment[]
-  
+  members     UserOnClientAssignment[]
+  deadline   DateTime? // deadline for the client assignment
+
   @@map("assignments")
 }
 
-
 // assigned users to the client assignment
 model UserOnClientAssignment {
-  id String @id @default(cuid())
-  user_id String
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade) 
+  id                   String           @id @default(cuid())
+  user_id              String
+  user                 User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
   client_assignment_id String
-  client_assignment ClientAssignment @relation(fields: [client_assignment_id], references: [id], onDelete: Cascade)
+  client_assignment    ClientAssignment @relation(fields: [client_assignment_id], references: [id], onDelete: Cascade)
 }
 
 model Task {
@@ -133,8 +133,10 @@ model Task {
   client_assignment_id String
   client_assignment    ClientAssignment @relation(fields: [client_assignment_id], references: [id], onDelete: Cascade)
   user_assignments     UserAssignment[]
-  pos Int // to store the position of our task according to the client / to manage the drag and drop positions
+  pos                  Int // to store the position of our task according to the client / to manage the drag and drop positions
 
+
+  deadline            DateTime? // deadline for the task
   @@map("tasks")
 }
 
