@@ -79,6 +79,36 @@ export class ClientAssignmentService {
       throw new Error('internal_server_error');
     }
   }
+  async updateClientAssignment(
+    client_assignment_id: string,
+    data: { deadline: Date },
+    current_user_id: string,
+  ) {
+    const workspace = await this.getWorkspaceId(client_assignment_id);
+    if (!workspace) throw new Error('workspace_not_found');
+    const isMember = await this.workspaceService.isWorkspaceMember(workspace, current_user_id);
+    const isOwner = await this.workspaceService.isWorkspaceOwner(workspace, current_user_id);
+    if (!isMember && !isOwner) throw new Error('unauthorized');
+
+    try {
+      const client_assignment = await this.prisma.clientAssignment.findUnique({
+        where: {
+          id: client_assignment_id,
+        },
+      });
+      if (!client_assignment) throw new Error('client_assignment_not_found');
+      await this.prisma.clientAssignment.update({
+        where: {
+          id: client_assignment_id,
+        },
+        data: {
+          deadline: data.deadline || client_assignment.deadline || null,
+        },
+      });
+    } catch (error) {
+      throw new Error('internal_server_error');
+    }
+  }
 
   async addMember(client_assignment_id: string, user_id: string, current_user_id: string) {
     try {
@@ -103,7 +133,7 @@ export class ClientAssignmentService {
       const workspace_id = await this.getWorkspaceId(client_assignment_id);
       const isMember = await this.workspaceService.isWorkspaceMember(workspace_id, current_user_id);
       const isOwner = await this.workspaceService.isWorkspaceOwner(workspace_id, current_user_id);
-      if (!isMember || !isOwner) throw new Error('unauthorized');
+      if (!isMember && !isOwner) throw new Error('unauthorized');
       await this.prisma.userOnClientAssignment.deleteMany({
         where: {
           user_id: user_id,
@@ -111,6 +141,7 @@ export class ClientAssignmentService {
         },
       });
     } catch (error) {
+      // throw error;
       throw new Error('internal_server_error');
     }
   }
