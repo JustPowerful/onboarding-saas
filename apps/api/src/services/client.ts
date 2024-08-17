@@ -88,6 +88,9 @@ export class ClientService {
     const isMember = await this.workspaceService.isWorkspaceMember(workspace_id, current_user_id);
     if (!isOwner && !isMember) throw new Error('unauthorized');
 
+    const isAllowed = this.workspaceService.hasPermission(workspace_id, current_user_id, 'EDIT');
+    if (!isAllowed) throw new Error('unauthorized');
+
     if (!(await this.workspaceService.hasPermission(workspace_id, current_user_id, 'EDIT')))
       throw new Error('unauthorized');
 
@@ -127,6 +130,13 @@ export class ClientService {
       if (!isOwner && !isMember) {
         throw new Error('unauthorized');
       }
+
+      const isAllowed = this.workspaceService.hasPermission(
+        client.workspaceId,
+        current_user_id,
+        'EDIT',
+      );
+      if (!isAllowed) throw new Error('unauthorized');
 
       if (!(await this.workspaceService.hasPermission(client.workspaceId, current_user_id, 'EDIT')))
         throw new Error('unauthorized');

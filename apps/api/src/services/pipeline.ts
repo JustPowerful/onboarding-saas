@@ -23,6 +23,7 @@ export class PipelineService {
   async createPipeline(data: PipelinePayload) {
     try {
       // get the highest pos value
+
       const latestPipeline = await this.prisma.pipeline.findFirst({
         where: {
           workspace_id: data.workspace_id,
@@ -35,6 +36,23 @@ export class PipelineService {
         },
       });
       const pos = latestPipeline ? latestPipeline.pos + 1 : 0; // if there is no pipeline, set the pos to 0
+
+      const isMember = await this.workspaceService.isWorkspaceMember(
+        data.workspace_id!,
+        data.owner_id!,
+      );
+      const isOwner = await this.workspaceService.isWorkspaceOwner(
+        data.workspace_id!,
+        data.owner_id!,
+      );
+      if (!isMember && !isOwner) throw new Error('unauthorized');
+
+      const hasPermission = await this.workspaceService.hasPermission(
+        data.workspace_id!,
+        data.owner_id!,
+        'EDIT',
+      );
+      if (!hasPermission) throw new Error('unauthorized');
 
       return await this.prisma.pipeline.create({
         data: {
@@ -159,6 +177,14 @@ export class PipelineService {
       current_user_id,
     );
     if (!isOwner && !isMember) throw new Error('unauthorized');
+
+    const hasPermission = await this.workspaceService.hasPermission(
+      pipeline.workspace_id,
+      current_user_id,
+      'EDIT',
+    );
+    if (!hasPermission) throw new Error('unauthorized');
+
     try {
       await this.prisma.clientAssignment.deleteMany({
         where: {
@@ -189,6 +215,14 @@ export class PipelineService {
       current_user_id,
     );
     if (!isOwner && !isMember) throw new Error('unauthorized');
+
+    const hasPermission = await this.workspaceService.hasPermission(
+      pipeline.workspace_id,
+      current_user_id,
+      'EDIT',
+    );
+    if (!hasPermission) throw new Error('unauthorized');
+
     try {
       return await this.prisma.pipeline.update({
         where: {
@@ -207,6 +241,13 @@ export class PipelineService {
     const isOwner = await this.workspaceService.isWorkspaceOwner(workspace_id, current_user_id);
     const isMember = await this.workspaceService.isWorkspaceMember(workspace_id, current_user_id);
     if (!isOwner && !isMember) throw new Error('unauthorized');
+
+    const hasPermission = await this.workspaceService.hasPermission(
+      workspace_id,
+      current_user_id,
+      'EDIT',
+    );
+    if (!hasPermission) throw new Error('unauthorized');
 
     try {
       pipelines.forEach(

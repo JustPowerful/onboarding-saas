@@ -45,9 +45,17 @@ export class TaskService {
       const workspace_id = clientAssignment.pipline.workspace.id;
       const isOwner = await this.workspaceService.isWorkspaceOwner(workspace_id, current_user_id);
       const isMember = await this.workspaceService.isWorkspaceMember(workspace_id, current_user_id);
+
       if (!isOwner && !isMember) {
         throw new Error('unauthorized');
       }
+
+      const isAllowed = await this.workspaceService.hasPermission(
+        workspace_id,
+        current_user_id,
+        'EDIT',
+      );
+      if (!isAllowed) throw new Error('unauthorized');
 
       const latest = await this.prisma.task.findFirst({
         where: {
@@ -105,6 +113,13 @@ export class TaskService {
       if (!isOwner && !isMember) {
         throw new Error('unauthorized');
       }
+
+      const hasPermission = await this.workspaceService.hasPermission(
+        workspace_id,
+        current_user_id,
+        'EDIT',
+      );
+      if (!hasPermission) throw new Error('unauthorized');
 
       await this.prisma.task.delete({
         where: {
@@ -185,6 +200,13 @@ export class TaskService {
       const isOwner = this.workspaceService.isWorkspaceOwner(workspaceId, current_user_id);
       const isMember = this.workspaceService.isWorkspaceMember(workspaceId, current_user_id);
       if (!isOwner && !isMember) throw new Error('unauthorized');
+      const hasPermission = await this.workspaceService.hasPermission(
+        workspaceId,
+        current_user_id,
+        'EDIT',
+      );
+      if (!hasPermission) throw new Error('unauthorized');
+
       return await this.prisma.task.update({
         where: {
           id: task_id,
@@ -321,6 +343,14 @@ export class TaskService {
       const isMember = await this.workspaceService.isWorkspaceMember(workspaceId, current_user_id);
       const isOwner = await this.workspaceService.isWorkspaceOwner(workspaceId, current_user_id);
       if (!isOwner && !isMember) throw new Error('unauthorized');
+
+      const hasPermission = await this.workspaceService.hasPermission(
+        workspaceId,
+        current_user_id,
+        'EDIT',
+      );
+
+      if (!hasPermission) throw new Error('unauthorized');
       const member = await this.prisma.user.findUnique({
         where: {
           id: member_id,
@@ -365,6 +395,14 @@ export class TaskService {
       const isMember = await this.workspaceService.isWorkspaceMember(workspaceId, current_user_id);
       const isOwner = await this.workspaceService.isWorkspaceOwner(workspaceId, current_user_id);
       if (!isOwner && !isMember) throw new Error('unauthorized');
+
+      const hasPermission = await this.workspaceService.hasPermission(
+        workspaceId,
+        current_user_id,
+        'EDIT',
+      );
+      if (!hasPermission) throw new Error('unauthorized');
+
       await this.prisma.userAssignment.deleteMany({
         where: {
           user_id: member_id,
@@ -399,6 +437,14 @@ export class TaskService {
       const isMember = await this.workspaceService.isWorkspaceMember(workspaceId, current_user_id);
       const isOwner = await this.workspaceService.isWorkspaceOwner(workspaceId, current_user_id);
       if (!isOwner && !isMember) throw new Error('unauthorized');
+
+      const hasPermission = await this.workspaceService.hasPermission(
+        workspaceId,
+        current_user_id,
+        'EDIT',
+      );
+      if (!hasPermission) throw new Error('unauthorized');
+
       return await this.prisma.task.update({
         where: {
           id: task_id,
@@ -434,6 +480,14 @@ export class TaskService {
       const isMember = await this.workspaceService.isWorkspaceMember(workspaceId, current_user_id);
       const isOwner = await this.workspaceService.isWorkspaceOwner(workspaceId, current_user_id);
       if (!isOwner && !isMember) throw new Error('unauthorized');
+
+      const hasPermission = await this.workspaceService.hasPermission(
+        workspaceId,
+        current_user_id,
+        'EDIT',
+      );
+      if (!hasPermission) throw new Error('unauthorized');
+
       return await this.prisma.task.update({
         where: {
           id: task_id,

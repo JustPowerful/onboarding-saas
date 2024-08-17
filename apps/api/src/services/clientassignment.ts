@@ -40,6 +40,13 @@ export class ClientAssignmentService {
       current_user_id,
     );
 
+    const isAllowed = this.workspaceService.hasPermission(
+      pipeline.workspace_id,
+      current_user_id,
+      'EDIT',
+    );
+    if (!isAllowed) throw new Error('unauthorized');
+
     if (isMember || isOwner) {
       const latest = await this.prisma.clientAssignment.findFirst({
         where: {
@@ -70,6 +77,9 @@ export class ClientAssignmentService {
       const isOwner = await this.workspaceService.isWorkspaceOwner(workspace_id, current_user_id);
       if (!isMember && !isOwner) throw new Error('unauthorized');
 
+      const isAllowed = this.workspaceService.hasPermission(workspace_id, current_user_id, 'EDIT');
+      if (!isAllowed) throw new Error('unauthorized');
+
       await this.prisma.clientAssignment.delete({
         where: {
           id: client_assignment_id,
@@ -89,6 +99,9 @@ export class ClientAssignmentService {
     const isMember = await this.workspaceService.isWorkspaceMember(workspace, current_user_id);
     const isOwner = await this.workspaceService.isWorkspaceOwner(workspace, current_user_id);
     if (!isMember && !isOwner) throw new Error('unauthorized');
+
+    const isAllowed = this.workspaceService.hasPermission(workspace, current_user_id, 'EDIT');
+    if (!isAllowed) throw new Error('unauthorized');
 
     try {
       const client_assignment = await this.prisma.clientAssignment.findUnique({
@@ -116,6 +129,10 @@ export class ClientAssignmentService {
       const isMember = await this.workspaceService.isWorkspaceMember(workspace_id, current_user_id);
       const isOwner = await this.workspaceService.isWorkspaceOwner(workspace_id, current_user_id);
       if (!isMember && !isOwner) throw new Error('unauthorized');
+
+      const isAllowed = this.workspaceService.hasPermission(workspace_id, current_user_id, 'EDIT');
+      if (!isAllowed) throw new Error('unauthorized');
+
       const member = await this.prisma.userOnClientAssignment.create({
         data: {
           client_assignment_id,
@@ -134,6 +151,10 @@ export class ClientAssignmentService {
       const isMember = await this.workspaceService.isWorkspaceMember(workspace_id, current_user_id);
       const isOwner = await this.workspaceService.isWorkspaceOwner(workspace_id, current_user_id);
       if (!isMember && !isOwner) throw new Error('unauthorized');
+
+      const isAllowed = this.workspaceService.hasPermission(workspace_id, current_user_id, 'EDIT');
+      if (!isAllowed) throw new Error('unauthorized');
+
       await this.prisma.userOnClientAssignment.deleteMany({
         where: {
           user_id: user_id,
