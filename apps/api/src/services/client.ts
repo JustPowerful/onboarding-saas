@@ -109,6 +109,36 @@ export class ClientService {
     }
   }
 
+  async updateClient(client_id: string, data: ClientPayload, current_user_id: string) {
+    try {
+      const client = await this.prisma.client.findUnique({
+        where: {
+          id: client_id,
+        },
+      });
+      if (!client) throw new Error('client_not_found');
+      const workspace_id = client.workspaceId;
+      const isOwner = await this.workspaceService.isWorkspaceOwner(workspace_id, current_user_id);
+      const isMember = await this.workspaceService.isWorkspaceMember(workspace_id, current_user_id);
+      if (!isOwner && !isMember) throw new Error('unauthorized');
+      const isAllowed = this.workspaceService.hasPermission(workspace_id, current_user_id, 'EDIT');
+      if (!isAllowed) throw new Error('unauthorized');
+
+      return await this.prisma.client.update({
+        where: {
+          id: client_id,
+        },
+        data: {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+        },
+      });
+    } catch (error) {
+      throw new Error('internal_server_error');
+    }
+  }
+
   async deleteClient(client_id: string, current_user_id: string) {
     try {
       const client = await this.prisma.client.findUnique({

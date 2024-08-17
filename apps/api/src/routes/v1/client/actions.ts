@@ -47,6 +47,21 @@ const routes: FastifyPluginAsync = async (fastify, opt) => {
       throw error;
     }
   });
+  fastify.patch('/update/:client_id', async (request, reply) => {
+    const { client_id } = request.params as { client_id: string };
+    const { name, email, phone } = request.body as {
+      name: string;
+      email: string;
+      phone: string;
+    };
+    const currentUserId = request.loggedUser.id;
+    try {
+      await clientService.updateClient(client_id, { name, email, phone }, currentUserId);
+      return reply.send({
+        message: 'Client updated successfully',
+      });
+    } catch (error) {}
+  });
   fastify.delete('/delete/:client_id', async (request, reply) => {
     try {
       const { client_id } = request.params as { client_id: string };

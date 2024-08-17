@@ -183,7 +183,7 @@ watch(
               <ClientTab :workspace="workspace" />
             </div>
             <div v-if="tab === 'SETTINGS'">
-              <SettingsTab :workspace="workspace" />
+              <SettingsTab :workspace="workspace" :reload-workspace="getWorkspaceData" />
             </div>
           </div>
         </div>
